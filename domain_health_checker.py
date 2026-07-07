@@ -146,23 +146,13 @@ if st.button("Run Health Check", type="primary"):
         else:
             st.info("No clean domains found.")
 
-        csv = df.to_csv(index=False).encode("utf-8")
-        st.download_button("Download results as CSV", csv, "domain_health_results.csv", "text/csv")
-
         st.markdown(
             """
-            <div style="background-color:#3d0d0d; border: 1px solid #ff4d4d;
-                        border-radius: 8px; padding: 14px 18px; margin-top: 20px;
-                        color: #ffb3b3; font-size: 15px; line-height: 1.5;">
-                ⚠️ <b>Important:</b> this checker's Spamhaus results can be
-                unreliable (Spamhaus blocks queries from this app's cloud hosting).
-                Before actually USING a domain, manually verify it is not listed
-                or blacklisted at
-                <a href="https://multirbl.valli.org/lookup/" target="_blank"
-                   style="color:#ff8080; text-decoration: underline;">
-                   multirbl.valli.org/lookup
-                </a> — just enter the domain there and confirm it comes back clean.
-            </div>
+            <p style="color:red; font-weight:bold;">
+            ⚠️ Important: Before launching any drops, every selected domain must also be checked at
+            <a href="https://multirbl.valli.org/lookup" style="color:red;">multirbl.valli.org/lookup</a>
+            to confirm it isn't listed on Spamhaus or any other blacklist. Don't launch on a domain that comes back flagged.
+            </p>
             """,
             unsafe_allow_html=True,
         )
