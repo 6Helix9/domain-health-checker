@@ -148,11 +148,26 @@ if st.button("Run Health Check", type="primary"):
 
         st.markdown(
             """
-            <p style="color:red; font-weight:bold;">
-            ⚠️ Important: Before launching any drops, every selected domain must also be checked at
-            <a href="https://multirbl.valli.org/lookup" style="color:red;">multirbl.valli.org/lookup</a>
-            to confirm it isn't listed on Spamhaus or any other blacklist. Don't launch on a domain that comes back flagged.
-            </p>
+            <div style="background-color:#2b1414; border-left: 4px solid #ff4d4d;
+                        border-radius: 8px; padding: 16px 20px; margin-top: 24px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:20px;">⚠️</span>
+                    <span style="color:#ff6b6b; font-weight:700; font-size:16px;">
+                        Before you launch any drops
+                    </span>
+                </div>
+                <p style="color:#e6e6e6; font-size:14px; line-height:1.6; margin:0 0 14px 0;">
+                    Every selected domain must be manually double-checked before use.
+                    Confirm it isn't listed on Spamhaus or any other blacklist —
+                    don't launch on a domain that comes back flagged.
+                </p>
+                <a href="https://multirbl.valli.org/lookup" target="_blank"
+                   style="display:inline-block; background-color:#ff4d4d; color:#1a0000;
+                          font-weight:700; font-size:14px; padding:8px 16px;
+                          border-radius:6px; text-decoration:none;">
+                    🔗 Check domain on multirbl.valli.org
+                </a>
+            </div>
             """,
             unsafe_allow_html=True,
         )
