@@ -96,8 +96,11 @@ def analyze_domain(domain):
 
 
 def style_row(row):
-    color = "background-color: #d4f4dd" if row["Status"] == "GOOD" else "background-color: #fbdcdc"
-    return [color] * len(row)
+    if row["Status"] == "GOOD":
+        style = "background-color: #d4f4dd; color: #0b3d1f; font-weight: 600;"
+    else:
+        style = "background-color: #fbdcdc; color: #5c0d0d; font-weight: 600;"
+    return [style] * len(row)
 
 
 st.title("🌐 Domain Health Checker")
