@@ -159,7 +159,7 @@ st.markdown(
     """
     <div style="text-align: center; margin-top: 60px; padding: 16px 0;
                 color: #6b7280; font-size: 14px; letter-spacing: 0.3px;">
-        ⚡ Made only with <span style="color:#a78bfa; font-weight:600;">vibe coding</span>
+        ⚡ No plan, just flow — <span style="color:#a78bfa; font-weight:600;">vibe coded</span>
         by <span style="color:#34d399; font-weight:600;">Ascended696</span>
     </div>
     """,
