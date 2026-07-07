@@ -154,3 +154,14 @@ if st.button("Run Health Check", type="primary"):
 
         csv = df.to_csv(index=False).encode("utf-8")
         st.download_button("Download results as CSV", csv, "domain_health_results.csv", "text/csv")
+
+st.markdown(
+    """
+    <div style="text-align: center; margin-top: 60px; padding: 16px 0;
+                color: #6b7280; font-size: 14px; letter-spacing: 0.3px;">
+        ⚡ Made only with <span style="color:#a78bfa; font-weight:600;">vibe coding</span>
+        by <span style="color:#34d399; font-weight:600;">Ascended696</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
