@@ -103,6 +103,15 @@ def style_row(row):
     return [style] * len(row)
 
 
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 st.title("🌐 Domain Health Checker")
 st.caption("Checks MX, SPF, DMARC, SSL expiry, and blacklist status for a list of domains.")
 
