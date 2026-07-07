@@ -149,6 +149,24 @@ if st.button("Run Health Check", type="primary"):
         csv = df.to_csv(index=False).encode("utf-8")
         st.download_button("Download results as CSV", csv, "domain_health_results.csv", "text/csv")
 
+        st.markdown(
+            """
+            <div style="background-color:#3d0d0d; border: 1px solid #ff4d4d;
+                        border-radius: 8px; padding: 14px 18px; margin-top: 20px;
+                        color: #ffb3b3; font-size: 15px; line-height: 1.5;">
+                ⚠️ <b>Important:</b> this checker's Spamhaus results can be
+                unreliable (Spamhaus blocks queries from this app's cloud hosting).
+                Before actually USING a domain, manually verify it is not listed
+                or blacklisted at
+                <a href="https://multirbl.valli.org/lookup/" target="_blank"
+                   style="color:#ff8080; text-decoration: underline;">
+                   multirbl.valli.org/lookup
+                </a> — just enter the domain there and confirm it comes back clean.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
 st.markdown(
     """
     <div style="text-align: center; margin-top: 60px; padding: 16px 0;
