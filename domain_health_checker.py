@@ -17,15 +17,27 @@ URI_BLOCKLISTS = {
 
 
 def check_ssl_expiry(domain):
+    """Opens a real TLS handshake and validates the certificate chain and
+    hostname (ssl.create_default_context() does full trust validation by
+    default) — so 'OK' here means a browser would trust it too, not just
+    that *a* certificate exists."""
     try:
         context = ssl.create_default_context()
-        with socket.create_connection((domain, 443), timeout=3) as sock:
+        with socket.create_connection((domain, 443), timeout=6) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as ssock:
                 cert = ssock.getpeercert()
                 expiry_str = cert["notAfter"]
                 expiry_date = datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z")
                 days_left = (expiry_date - datetime.now()).days
                 return f"{days_left}d", days_left > 7
+    except socket.timeout:
+        return "TIMEOUT", False
+    except ConnectionRefusedError:
+        return "REFUSED", False
+    except ssl.SSLCertVerificationError:
+        return "UNTRUSTED CERT", False
+    except ssl.SSLError:
+        return "SSL ERROR", False
     except Exception:
         return "NoSSL", False
 
@@ -74,7 +86,7 @@ def analyze_domain(domain):
     domain_bl_status, domain_bl_sources = check_domain_blocklists(domain)
     ip_bl_status, ip_bl_sources = check_ip_blacklist(ip)
 
-    is_good = (domain_bl_status == "CLEAN" and ssl_val != "NoSSL" and ip_bl_status == "CLEAN")
+    is_good = (domain_bl_status == "CLEAN" and ssl_ok and ip_bl_status == "CLEAN")
 
     return {
         "Domain": domain,
@@ -115,7 +127,7 @@ domains_input = st.text_area(
     placeholder="example.com\nanotherdomain.com",
 )
 
-max_workers = st.slider("Parallel checks", min_value=1, max_value=20, value=10)
+max_workers = 10
 
 if st.button("Run Health Check", type="primary"):
     domains = [d.strip() for d in domains_input.splitlines() if d.strip()]
