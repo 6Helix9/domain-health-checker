@@ -287,7 +287,7 @@ def style_df_rows(row):
 # --- Master Layout Assembly ---
 
 st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🔗 Redirect Domain Checker</h2>", unsafe_allow_html=True)
-st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>"Every jump leaves a trace. Secure the chain, guarantee the drop."</p>", unsafe_allow_html=True)
+st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>Every jump leaves a trace. Secure the chain, guarantee the drop.</p>", unsafe_allow_html=True)
 
 GOOGLE_API_KEY = st.secrets.get("GOOGLE_SAFE_BROWSING_KEY", "")
 VIRUSTOTAL_API_KEY = st.secrets.get("VIRUSTOTAL_KEY", "")
