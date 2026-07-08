@@ -60,6 +60,67 @@ st.markdown("""
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
     }
+
+    /* Executive KPI Dashboard Cards */
+    .kpi-container {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .kpi-card {
+        flex: 1;
+        background-color: #161a1f;
+        border: 1px solid #232932;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: left;
+    }
+    .kpi-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #9ca3af;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    
+    /* Premium Centered Warning Card */
+    .warning-card {
+        max-width: 680px;
+        margin: 56px auto 32px auto; /* Forces the card to the exact center of the screen */
+        background: linear-gradient(180deg, #1a0f12 0%, #0d0708 100%);
+        border: 1px solid #3d1c20;
+        border-top: 3px solid #ef4444;
+        border-radius: 16px;
+        padding: 36px 40px;
+        box-shadow: 0 20px 40px -15px rgba(239, 68, 68, 0.15);
+        text-align: center;
+    }
+    .warning-btn {
+        display: inline-block;
+        background: rgba(239, 68, 68, 0.05);
+        color: #f87171 !important;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        font-weight: 600;
+        font-size: 14px;
+        padding: 12px 32px;
+        border-radius: 8px;
+        text-decoration: none !important;
+        transition: all 0.3s ease;
+        letter-spacing: 0.5px;
+        margin-top: 16px;
+    }
+    .warning-btn:hover {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: #ef4444;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px -6px rgba(239, 68, 68, 0.4);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -201,23 +262,20 @@ def analyze_domain(domain, google_key, vt_key, spamhaus_key):
     }
 
 def style_df_rows(row):
-    # CSS template for the standard text in the row
     base_style = "background-color: {bg}; border-bottom: 1px solid #1f2937; color: #e1e7ef;"
-    # CSS template specifically for the Status column to make it glow heavily
     glow_style = "background-color: {bg}; border-bottom: 1px solid #1f2937; color: {color}; text-shadow: 0 0 12px {color}, 0 0 24px {color}; font-weight: 800; text-align: center; font-size: 15px;"
     
     if row["Status"] == "GOOD":
         bg = "rgba(16, 185, 129, 0.08)"
-        glow_color = "#34d399"  # Neon Green
+        glow_color = "#34d399"
     elif row["Status"] == "NON-SSL":
         bg = "rgba(245, 158, 11, 0.08)"
-        glow_color = "#fbbf24"  # Neon Amber
+        glow_color = "#fbbf24"
     else:
         bg = "rgba(239, 68, 68, 0.08)"
-        glow_color = "#f87171"  # Neon Red
+        glow_color = "#f87171"
         
     styles = []
-    # Apply the base style to everything, but inject the neon glow strictly to the Status column
     for col in row.index:
         if col == "Status":
             styles.append(glow_style.format(bg=bg, color=glow_color))
@@ -281,29 +339,30 @@ if st.button("Run Comprehensive Check", type="primary"):
         else:
             st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ No clean domains identified in this batch.</div>", unsafe_allow_html=True)
 
-        # --- Custom Warning Message Box with NON-SSL Note ---
+        # --- High-End Centered Warning Component ---
         st.markdown(
             """
-            <div style="background-color:#2b1414; border-left: 4px solid #ff4d4d;
-                        border-radius: 8px; padding: 16px 20px; margin-top: 24px;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                    <span style="font-size:20px;">⚠️</span>
-                    <span style="color:#ff6b6b; font-weight:700; font-size:16px;">
-                        Before you launch any drops
-                    </span>
-                </div><br>
-               <p style="color:#e6e6e6; font-size:14px; line-height:1.6; margin:0 0 14px 0;">
-    Every selected domain must be manually double-checked before use.<br>
-    Confirm that it is not listed on Spamhaus or any other blacklist.<br>
-    Prefer to use domains that come back clean.<br><br>
-    <span style="color:#fcd34d; font-weight:600;">💡 NOTE ON NON-SSL DOMAINS:</span> If a domain comes back as <b>NON-SSL</b> but is completely clean on all blocklists, it is often still perfectly fine to use for sending drops or as a fast HTTP redirect/tracking chain.<br><br>
-    Do not launch on a domain that is flagged.<br>
-</p>
-                <a href="https://multirbl.valli.org/lookup" target="_blank"
-                   style="display:inline-block; background-color:#ff4d4d; color:#1a0000;
-                          font-weight:700; font-size:14px; padding:8px 16px;
-                          border-radius:6px; text-decoration:none;">
-                    🔗 Check domain on multirbl.valli.org
+            <div class="warning-card">
+                <div style="font-size: 32px; margin-bottom: 12px; line-height: 1;">⚠️</div>
+                <h3 style="color: #f87171; font-weight: 700; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 16px 0;">
+                    Before You Launch Any Drops
+                </h3>
+                <div style="color: #9ca3af; font-size: 15px; line-height: 1.7; margin-bottom: 24px; text-align: center;">
+                    <p style="margin: 0 0 12px 0;">
+                        Every selected domain must be manually double-checked before use.<br>
+                        Confirm that it is not listed on Spamhaus or any other blacklist.<br>
+                        Prefer to use domains that come back clean.
+                    </p>
+                    <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 12px; margin: 16px 0;">
+                        <span style="color: #fcd34d; font-weight: 700; letter-spacing: 0.5px;">💡 NOTE ON NON-SSL DOMAINS</span><br>
+                        <span style="color: #d1d5db; font-size: 14px;">If a domain comes back as <b>NON-SSL</b> but is completely clean on all blocklists, it is often still perfectly fine to use for sending drops or as a fast HTTP redirect/tracking chain.</span>
+                    </div>
+                    <p style="color: #e5e7eb; font-weight: 600; margin: 0;">
+                        Do not launch on a domain that is flagged.
+                    </p>
+                </div>
+                <a href="https://multirbl.valli.org/lookup" target="_blank" class="warning-btn">
+                    🔗 Check domain on MultiRBL
                 </a>
             </div>
             """,
@@ -312,7 +371,7 @@ if st.button("Run Comprehensive Check", type="primary"):
 
 st.markdown(
     """
-    <div style="text-align: center; margin-top: 70px; padding: 24px 0; border-top: 1px solid #1f2937;
+    <div style="text-align: center; margin-top: 40px; padding: 24px 0; border-top: 1px solid #1f2937;
                 color: #4b5563; font-size: 13px; letter-spacing: 0.5px;">
         ⚡ No plan, just flow — <span style="color:#a78bfa; font-weight:600;">vibe coded</span>
         by <span style="color:#34d399; font-weight:600;">Ascended696</span>
