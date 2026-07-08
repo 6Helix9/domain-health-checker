@@ -205,13 +205,21 @@ def analyze_domain(domain, google_key, vt_key, spamhaus_key):
     
     bl_summary = f"❌ LISTED ({', '.join(detected_bls)})" if detected_bls else "🟢 CLEAN"
     
-    is_clean = (
-        ssl_ok and 
+    # Evaluate Reputation separate from SSL
+    reputation_clean = (
         not detected_bls and 
         "CLEAN" in gsb and 
         "CLEAN" in vt and 
         "CLEAN" in urlhaus
     )
+
+    # Determine final traffic light status
+    if reputation_clean and ssl_ok:
+        final_status = "GOOD"
+    elif reputation_clean and not ssl_ok:
+        final_status = "NON-SSL"
+    else:
+        final_status = "BAD"
 
     return {
         "Domain": domain,
@@ -220,28 +228,28 @@ def analyze_domain(domain, google_key, vt_key, spamhaus_key):
         "Google Safe Browsing": gsb,
         "VirusTotal Intelligence": vt,
         "URLHaus Payload": urlhaus,
-        "Status": "GOOD" if is_clean else "BAD"
+        "Status": final_status
     }
 
 def style_df_rows(row):
     # Professional subtle background styling for maximum readability
     if row["Status"] == "GOOD":
         return ["background-color: rgba(16, 185, 129, 0.08); color: #e1e7ef; border-bottom: 1px solid #1f2937;"] * len(row)
+    elif row["Status"] == "NON-SSL":
+        # Amber/Yellow styling for clean domains missing SSL
+        return ["background-color: rgba(245, 158, 11, 0.08); color: #fcd34d; border-bottom: 1px solid #1f2937;"] * len(row)
     else:
         return ["background-color: rgba(239, 68, 68, 0.06); color: #e1e7ef; border-bottom: 1px solid #1f2937;"] * len(row)
 
 # --- Master Layout Assembly ---
 
-# Header Section (Reverted to your original title and caption)
 st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🔗 Expanded Redirect Domain Checker</h2>", unsafe_allow_html=True)
 st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>Checks SSL expiration and maps domains against multi-source threat intelligence platforms.</p>", unsafe_allow_html=True)
 
-# Secure Key Extraction
 GOOGLE_API_KEY = st.secrets.get("GOOGLE_SAFE_BROWSING_KEY", "")
 VIRUSTOTAL_API_KEY = st.secrets.get("VIRUSTOTAL_KEY", "")
 SPAMHAUS_DQS_KEY = st.secrets.get("SPAMHAUS_DQS_KEY", "")
 
-# Input Field Configuration
 domains_input = st.text_area(
     "Target Domains Submissions",
     height=160,
@@ -255,7 +263,6 @@ if st.button("Run Comprehensive Check", type="primary"):
     if not target_list:
         st.error("Submission queue empty. Please add at least one domain first.")
     else:
-        # Dynamic Scanning UI Elements
         scan_progress = st.progress(0, text="Initializing scanning...")
         dataset = []
         
@@ -278,9 +285,10 @@ if st.button("Run Comprehensive Check", type="primary"):
         # Calculated State Parameters
         total_count = len(df)
         clean_count = len(df[df["Status"] == "GOOD"])
-        compromised_count = total_count - clean_count
+        non_ssl_count = len(df[df["Status"] == "NON-SSL"])
+        compromised_count = len(df[df["Status"] == "BAD"])
 
-        # KPI Dashboard Layout Matrix Injection
+        # KPI Dashboard Layout Matrix Injection (Now with 4 Cards)
         st.markdown(f"""
         <div class="kpi-container">
             <div class="kpi-card">
@@ -291,6 +299,10 @@ if st.button("Run Comprehensive Check", type="primary"):
                 <div class="kpi-label" style="color:#10b981;">Verified Clean</div>
                 <div class="kpi-value" style="color:#34d399;">{clean_count}</div>
             </div>
+            <div class="kpi-card" style="border-left: 3px solid #f59e0b;">
+                <div class="kpi-label" style="color:#f59e0b;">Clean (NON-SSL)</div>
+                <div class="kpi-value" style="color:#fbbf24;">{non_ssl_count}</div>
+            </div>
             <div class="kpi-card" style="border-left: 3px solid #ef4444;">
                 <div class="kpi-label" style="color:#ef4444;">Domains Flagged</div>
                 <div class="kpi-value" style="color:#f87171;">{compromised_count}</div>
@@ -298,7 +310,6 @@ if st.button("Run Comprehensive Check", type="primary"):
         </div>
         """, unsafe_allow_html=True)
 
-        # System Output Matrix Display
         st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>Analysis Results</h4>", unsafe_allow_html=True)
         st.dataframe(
             df.style.apply(style_df_rows, axis=1), 
@@ -306,15 +317,14 @@ if st.button("Run Comprehensive Check", type="primary"):
             hide_index=True
         )
 
-        # Actionable Target Outputs Separator
-        clean_assets = df[df["Status"] == "GOOD"]["Domain"].tolist()
-        st.markdown("<h4 style='font-weight:600; margin-top:28px; margin-bottom:12px;'>✅ Clean / Verified Domains</h4>", unsafe_allow_html=True)
+        clean_assets = df[(df["Status"] == "GOOD") | (df["Status"] == "NON-SSL")]["Domain"].tolist()
+        st.markdown("<h4 style='font-weight:600; margin-top:28px; margin-bottom:12px;'>✅ Clean / Usable Domains</h4>", unsafe_allow_html=True)
         if clean_assets:
             st.code("\n".join(clean_assets), language="text")
         else:
-            st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ No completely clean domains identified in this batch.</div>", unsafe_allow_html=True)
+            st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ No clean domains identified in this batch.</div>", unsafe_allow_html=True)
 
-        # --- Your Custom Warning Message Box (Completely Restored) ---
+        # --- Custom Warning Message Box with NON-SSL Note ---
         st.markdown(
             """
             <div style="background-color:#2b1414; border-left: 4px solid #ff4d4d;
@@ -324,11 +334,12 @@ if st.button("Run Comprehensive Check", type="primary"):
                     <span style="color:#ff6b6b; font-weight:700; font-size:16px;">
                         Before you launch any drops
                     </span>
-                </div><br><br>
+                </div><br>
                <p style="color:#e6e6e6; font-size:14px; line-height:1.6; margin:0 0 14px 0;">
     Every selected domain must be manually double-checked before use.<br>
     Confirm that it is not listed on Spamhaus or any other blacklist.<br>
-    Prefer to use domains that come back clean.<br>
+    Prefer to use domains that come back clean.<br><br>
+    <span style="color:#fcd34d; font-weight:600;">💡 NOTE ON NON-SSL DOMAINS:</span> If a domain comes back as <b>NON-SSL</b> but is completely clean on all blocklists, it is often still perfectly fine to use for sending drops or as a fast HTTP redirect/tracking chain.<br><br>
     Do not launch on a domain that is flagged.<br>
 </p>
                 <a href="https://multirbl.valli.org/lookup" target="_blank"
@@ -342,7 +353,6 @@ if st.button("Run Comprehensive Check", type="primary"):
             unsafe_allow_html=True,
         )
 
-# Signature Footer Node
 st.markdown(
     """
     <div style="text-align: center; margin-top: 70px; padding: 24px 0; border-top: 1px solid #1f2937;
