@@ -211,12 +211,12 @@ if st.button("Run Comprehensive Check", type="primary"):
                     <span style="color:#ff6b6b; font-weight:700; font-size:16px;">
                         Before you launch any drops
                     </span>
-                </div>
+                </div><br><br>
                <p style="color:#e6e6e6; font-size:14px; line-height:1.6; margin:0 0 14px 0;">
-    Every selected domain must be manually double-checked before use.
-    Confirm that it is not listed on Spamhaus or any other blacklist.
-    Prefer to use domains that come back clean.
-    Do not launch on a domain that is flagged.
+    Every selected domain must be manually double-checked before use.<br>
+    Confirm that it is not listed on Spamhaus or any other blacklist.<br>
+    Prefer to use domains that come back clean.<br>
+    Do not launch on a domain that is flagged.<br>
 </p>
                 <a href="https://multirbl.valli.org/lookup" target="_blank"
                    style="display:inline-block; background-color:#ff4d4d; color:#1a0000;
