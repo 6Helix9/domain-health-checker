@@ -25,10 +25,6 @@ def check_ssl_expiry(domain):
         return "NoSSL/Error", False
 
 def check_dnsbl(domain, zone, friendly_name):
-    """
-    Standard DNSBL lookup. Note: Spamhaus may fail if your network 
-    uses a public DNS resolver (e.g., Google/Cloudflare).
-    """
     try:
         query = f"{domain}.{zone}"
         dns.resolver.resolve(query, "A")
@@ -87,44 +83,45 @@ def check_urlhaus(domain):
     except Exception:
         return "API ERROR"
 
-def analyze_domain(domain, google_key, vt_key):
+def analyze_domain(domain, google_key, vt_key, spamhaus_key):
     domain = domain.strip().lower()
     if not domain:
         return None
     
-    # Try resolving IP first
     try:
         ip = socket.gethostbyname(domain)
     except Exception:
         return {
             "Domain": domain, "SSL": "-", "DNS Status": "DOWN",
             "Google Safe Browsing": "-", "VirusTotal": "-", "URLHaus": "-",
-            "Blocklists": "UNRESOLVABLE", "Status": "BAD"
+            "DNS Blocklists": "UNRESOLVABLE", "Status": "BAD"
         }
 
-    # Parallelize checks
     ssl_val, ssl_ok = check_ssl_expiry(domain)
     
     # DNS-based checks
     detected_bls = []
-    # SURBL & SORBS RHSBL
     surbl = check_dnsbl(domain, "multi.surbl.org", "SURBL")
     sorbs = check_dnsbl(domain, "uribl.rhsbl.sorbs.net", "SORBS")
-    spamhaus = check_dnsbl(domain, "dbl.spamhaus.org", "Spamhaus DBL")
     
     if surbl: detected_bls.append(surbl)
     if sorbs: detected_bls.append(sorbs)
-    if spamhaus: detected_bls.append(spamhaus)
     
-    # API-based checks
+    # Custom Spamhaus DQS check if key exists
+    if spamhaus_key:
+        spamhaus = check_dnsbl(f"{domain}.{spamhaus_key}", "dbl.spamhaus.org", "Spamhaus DBL")
+        if spamhaus: detected_bls.append(spamhaus)
+    else:
+        # Check standard if no key, but remember it acts false-clean in cloud environments
+        spamhaus = check_dnsbl(domain, "dbl.spamhaus.org", "Spamhaus DBL")
+        if spamhaus: detected_bls.append(spamhaus)
+
     gsb = check_google_safe_browsing(domain, google_key)
     vt = check_virustotal(domain, vt_key)
     urlhaus = check_urlhaus(domain)
     
-    # Compile results
     bl_summary = ", ".join(detected_bls) if detected_bls else "CLEAN"
     
-    # Determine overall status
     is_clean = (
         ssl_ok and 
         not detected_bls and 
@@ -152,15 +149,21 @@ def style_row(row):
 
 # --- UI Layout ---
 
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 st.title("🔗 Expanded Redirect Domain Checker")
 st.caption("Checks SSL expiration and maps domains against multi-source threat intelligence platforms.")
 
-# Fetch API Keys securely from Streamlit Secrets
 GOOGLE_API_KEY = st.secrets.get("GOOGLE_SAFE_BROWSING_KEY", "")
 VIRUSTOTAL_API_KEY = st.secrets.get("VIRUSTOTAL_KEY", "")
-
-if not GOOGLE_API_KEY or not VIRUSTOTAL_API_KEY:
-    st.info("💡 Note: For Google Safe Browsing and VirusTotal checks to work, configure your keys in your `.streamlit/secrets.toml` file.")
+SPAMHAUS_DQS_KEY = st.secrets.get("SPAMHAUS_DQS_KEY", "")
 
 domains_input = st.text_area(
     "Paste domains (one per line)",
@@ -177,7 +180,7 @@ if st.button("Run Comprehensive Check", type="primary"):
         results = []
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {executor.submit(analyze_domain, d, GOOGLE_API_KEY, VIRUSTOTAL_API_KEY): d for d in domains}
+            futures = {executor.submit(analyze_domain, d, GOOGLE_API_KEY, VIRUSTOTAL_API_KEY, SPAMHAUS_DQS_KEY): d for d in domains}
             done = 0
             for future in concurrent.futures.as_completed(futures):
                 res = future.result()
@@ -197,3 +200,42 @@ if st.button("Run Comprehensive Check", type="primary"):
             st.code("\n".join(ready))
         else:
             st.info("No completely clean domains identified in this batch.")
+
+        # --- Your Custom Warning Message Box ---
+        st.markdown(
+            """
+            <div style="background-color:#2b1414; border-left: 4px solid #ff4d4d;
+                        border-radius: 8px; padding: 16px 20px; margin-top: 24px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:20px;">⚠️</span>
+                    <span style="color:#ff6b6b; font-weight:700; font-size:16px;">
+                        Before you launch any drops
+                    </span>
+                </div>
+               <p style="color:#e6e6e6; font-size:14px; line-height:1.6; margin:0 0 14px 0;">
+    Every selected domain must be manually double-checked before use.
+    Confirm that it is not listed on Spamhaus or any other blacklist.
+    Prefer to use domains that come back clean.
+    Do not launch on a domain that is flagged.
+</p>
+                <a href="https://multirbl.valli.org/lookup" target="_blank"
+                   style="display:inline-block; background-color:#ff4d4d; color:#1a0000;
+                          font-weight:700; font-size:14px; padding:8px 16px;
+                          border-radius:6px; text-decoration:none;">
+                    🔗 Check domain on multirbl.valli.org
+                </a>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+st.markdown(
+    """
+    <div style="text-align: center; margin-top: 60px; padding: 16px 0;
+                color: #6b7280; font-size: 14px; letter-spacing: 0.3px;">
+        ⚡ No plan, just flow — <span style="color:#a78bfa; font-weight:600;">vibe coded</span>
+        by <span style="color:#34d399; font-weight:600;">Ascended696</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
