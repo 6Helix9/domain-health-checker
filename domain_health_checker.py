@@ -60,34 +60,6 @@ st.markdown("""
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
     }
-
-    /* Executive KPI Dashboard Cards */
-    .kpi-container {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    .kpi-card {
-        flex: 1;
-        background-color: #161a1f;
-        border: 1px solid #232932;
-        border-radius: 12px;
-        padding: 20px;
-        text-align: left;
-    }
-    .kpi-label {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #9ca3af;
-        margin-bottom: 6px;
-        font-weight: 600;
-    }
-    .kpi-value {
-        font-size: 28px;
-        font-weight: 700;
-        color: #ffffff;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -184,7 +156,6 @@ def analyze_domain(domain, google_key, vt_key, spamhaus_key):
 
     ssl_val, ssl_ok = check_ssl_expiry(domain)
     
-    # Live DNSBL Matrix Execution
     detected_bls = []
     surbl = check_dnsbl(domain, "multi.surbl.org", "SURBL")
     sorbs = check_dnsbl(domain, "uribl.rhsbl.sorbs.net", "SORBS")
@@ -205,7 +176,6 @@ def analyze_domain(domain, google_key, vt_key, spamhaus_key):
     
     bl_summary = f"❌ LISTED ({', '.join(detected_bls)})" if detected_bls else "🟢 CLEAN"
     
-    # Evaluate Reputation separate from SSL
     reputation_clean = (
         not detected_bls and 
         "CLEAN" in gsb and 
@@ -213,7 +183,6 @@ def analyze_domain(domain, google_key, vt_key, spamhaus_key):
         "CLEAN" in urlhaus
     )
 
-    # Determine final traffic light status
     if reputation_clean and ssl_ok:
         final_status = "GOOD"
     elif reputation_clean and not ssl_ok:
@@ -232,14 +201,30 @@ def analyze_domain(domain, google_key, vt_key, spamhaus_key):
     }
 
 def style_df_rows(row):
-    # Professional subtle background styling for maximum readability
+    # CSS template for the standard text in the row
+    base_style = "background-color: {bg}; border-bottom: 1px solid #1f2937; color: #e1e7ef;"
+    # CSS template specifically for the Status column to make it glow heavily
+    glow_style = "background-color: {bg}; border-bottom: 1px solid #1f2937; color: {color}; text-shadow: 0 0 12px {color}, 0 0 24px {color}; font-weight: 800; text-align: center; font-size: 15px;"
+    
     if row["Status"] == "GOOD":
-        return ["background-color: rgba(16, 185, 129, 0.08); color: #e1e7ef; border-bottom: 1px solid #1f2937;"] * len(row)
+        bg = "rgba(16, 185, 129, 0.08)"
+        glow_color = "#34d399"  # Neon Green
     elif row["Status"] == "NON-SSL":
-        # Amber/Yellow styling for clean domains missing SSL
-        return ["background-color: rgba(245, 158, 11, 0.08); color: #fcd34d; border-bottom: 1px solid #1f2937;"] * len(row)
+        bg = "rgba(245, 158, 11, 0.08)"
+        glow_color = "#fbbf24"  # Neon Amber
     else:
-        return ["background-color: rgba(239, 68, 68, 0.06); color: #e1e7ef; border-bottom: 1px solid #1f2937;"] * len(row)
+        bg = "rgba(239, 68, 68, 0.08)"
+        glow_color = "#f87171"  # Neon Red
+        
+    styles = []
+    # Apply the base style to everything, but inject the neon glow strictly to the Status column
+    for col in row.index:
+        if col == "Status":
+            styles.append(glow_style.format(bg=bg, color=glow_color))
+        else:
+            styles.append(base_style.format(bg=bg))
+            
+    return styles
 
 # --- Master Layout Assembly ---
 
@@ -281,34 +266,6 @@ if st.button("Run Comprehensive Check", type="primary"):
         
         scan_progress.empty()
         df = pd.DataFrame(dataset)
-
-        # Calculated State Parameters
-        total_count = len(df)
-        clean_count = len(df[df["Status"] == "GOOD"])
-        non_ssl_count = len(df[df["Status"] == "NON-SSL"])
-        compromised_count = len(df[df["Status"] == "BAD"])
-
-        # KPI Dashboard Layout Matrix Injection (Now with 4 Cards)
-        st.markdown(f"""
-        <div class="kpi-container">
-            <div class="kpi-card">
-                <div class="kpi-label">Total Evaluated</div>
-                <div class="kpi-value">{total_count}</div>
-            </div>
-            <div class="kpi-card" style="border-left: 3px solid #10b981;">
-                <div class="kpi-label" style="color:#10b981;">Verified Clean</div>
-                <div class="kpi-value" style="color:#34d399;">{clean_count}</div>
-            </div>
-            <div class="kpi-card" style="border-left: 3px solid #f59e0b;">
-                <div class="kpi-label" style="color:#f59e0b;">Clean (NON-SSL)</div>
-                <div class="kpi-value" style="color:#fbbf24;">{non_ssl_count}</div>
-            </div>
-            <div class="kpi-card" style="border-left: 3px solid #ef4444;">
-                <div class="kpi-label" style="color:#ef4444;">Domains Flagged</div>
-                <div class="kpi-value" style="color:#f87171;">{compromised_count}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
 
         st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>Analysis Results</h4>", unsafe_allow_html=True)
         st.dataframe(
