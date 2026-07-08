@@ -89,17 +89,17 @@ st.markdown("""
         color: #ffffff;
     }
     
-    /* Premium Centered Warning Card */
+    /* Premium Column Warning Card */
     .warning-card {
-        max-width: 680px;
-        margin: 56px auto 32px auto; /* Forces the card to the exact center of the screen */
         background: linear-gradient(180deg, #1a0f12 0%, #0d0708 100%);
         border: 1px solid #3d1c20;
         border-top: 3px solid #ef4444;
-        border-radius: 16px;
-        padding: 36px 40px;
+        border-radius: 12px;
+        padding: 28px 32px;
         box-shadow: 0 20px 40px -15px rgba(239, 68, 68, 0.15);
         text-align: center;
+        height: 100%;
+        margin-top: 8px;
     }
     .warning-btn {
         display: inline-block;
@@ -108,12 +108,12 @@ st.markdown("""
         border: 1px solid rgba(239, 68, 68, 0.3);
         font-weight: 600;
         font-size: 14px;
-        padding: 12px 32px;
+        padding: 12px 24px;
         border-radius: 8px;
         text-decoration: none !important;
         transition: all 0.3s ease;
         letter-spacing: 0.5px;
-        margin-top: 16px;
+        margin-top: 12px;
     }
     .warning-btn:hover {
         background: rgba(239, 68, 68, 0.15);
@@ -286,8 +286,8 @@ def style_df_rows(row):
 
 # --- Master Layout Assembly ---
 
-st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🔗 Redirect Domain Checker</h2>", unsafe_allow_html=True)
-st.markdown("", unsafe_allow_html=True)
+st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🔗 Expanded Redirect Domain Checker</h2>", unsafe_allow_html=True)
+st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>Checks SSL expiration and maps domains against multi-source threat intelligence platforms.</p>", unsafe_allow_html=True)
 
 GOOGLE_API_KEY = st.secrets.get("GOOGLE_SAFE_BROWSING_KEY", "")
 VIRUSTOTAL_API_KEY = st.secrets.get("VIRUSTOTAL_KEY", "")
@@ -332,42 +332,48 @@ if st.button("Run Comprehensive Check", type="primary"):
             hide_index=True
         )
 
-        clean_assets = df[(df["Status"] == "GOOD") | (df["Status"] == "NON-SSL")]["Domain"].tolist()
-        st.markdown("<h4 style='font-weight:600; margin-top:28px; margin-bottom:12px;'>✅ Clean / Usable Domains</h4>", unsafe_allow_html=True)
-        if clean_assets:
-            st.code("\n".join(clean_assets), language="text")
-        else:
-            st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ No clean domains identified in this batch.</div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
+        
+        # --- Side-by-Side Layout ---
+        col1, col2 = st.columns([1, 1.2], gap="large")
+        
+        with col1:
+            clean_assets = df[(df["Status"] == "GOOD") | (df["Status"] == "NON-SSL")]["Domain"].tolist()
+            st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>✅ Clean / Usable Domains</h4>", unsafe_allow_html=True)
+            if clean_assets:
+                st.code("\n".join(clean_assets), language="text")
+            else:
+                st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ No clean domains identified in this batch.</div>", unsafe_allow_html=True)
 
-        # --- High-End Centered Warning Component ---
-        st.markdown(
-            """
-            <div class="warning-card">
-                <div style="font-size: 32px; margin-bottom: 12px; line-height: 1;">⚠️</div>
-                <h3 style="color: #f87171; font-weight: 700; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 16px 0;">
-                    Before You Launch Any Drops
-                </h3>
-                <div style="color: #9ca3af; font-size: 15px; line-height: 1.7; margin-bottom: 24px; text-align: center;">
-                    <p style="margin: 0 0 12px 0;">
-                        Every selected domain must be manually double-checked before use.<br>
-                        Confirm that it is not listed on Spamhaus or any other blacklist.<br>
-                        Prefer to use domains that come back clean.
-                    </p>
-                    <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 12px; margin: 16px 0;">
-                        <span style="color: #fcd34d; font-weight: 700; letter-spacing: 0.5px;">💡 NOTE ON NON-SSL DOMAINS</span><br>
-                        <span style="color: #d1d5db; font-size: 14px;">If a domain comes back as <b>NON-SSL</b> but is completely clean on all blocklists, it is often still perfectly fine to use for sending drops or as a fast HTTP redirect/tracking chain.</span>
+        with col2:
+            st.markdown(
+                """
+                <div class="warning-card">
+                    <div style="font-size: 28px; margin-bottom: 8px; line-height: 1;">⚠️</div>
+                    <h3 style="color: #f87171; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px 0;">
+                        Before You Launch Any Drops
+                    </h3>
+                    <div style="color: #9ca3af; font-size: 14px; line-height: 1.6; margin-bottom: 16px; text-align: center;">
+                        <p style="margin: 0 0 12px 0;">
+                            Every selected domain must be manually double-checked before use.<br>
+                            Confirm that it is not listed on Spamhaus or any other blacklist.<br>
+                            Prefer to use domains that come back clean.
+                        </p>
+                        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 10px; margin: 12px 0;">
+                            <span style="color: #fcd34d; font-weight: 700; font-size: 13px; letter-spacing: 0.5px;">💡 NOTE ON NON-SSL DOMAINS</span><br>
+                            <span style="color: #d1d5db; font-size: 13px;">If a domain is <b>NON-SSL</b> but clean on all blocklists, it is often fine to use for drops or HTTP redirects.</span>
+                        </div>
+                        <p style="color: #e5e7eb; font-weight: 600; margin: 0;">
+                            Do not launch on a domain that is flagged.
+                        </p>
                     </div>
-                    <p style="color: #e5e7eb; font-weight: 600; margin: 0;">
-                        Do not launch on a domain that is flagged.
-                    </p>
+                    <a href="https://multirbl.valli.org/lookup" target="_blank" class="warning-btn">
+                        🔗 Check domain on MultiRBL
+                    </a>
                 </div>
-                <a href="https://multirbl.valli.org/lookup" target="_blank" class="warning-btn">
-                    🔗 Check domain on MultiRBL
-                </a>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+                """,
+                unsafe_allow_html=True,
+            )
 
 st.markdown(
     """
