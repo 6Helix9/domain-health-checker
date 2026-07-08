@@ -1,3 +1,4 @@
 streamlit
 dnspython
 pandas
+requests
