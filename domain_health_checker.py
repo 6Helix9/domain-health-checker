@@ -22,7 +22,7 @@ def check_ssl_expiry(domain):
                 days_left = (expiry_date - datetime.now()).days
                 return f"{days_left}d", days_left > 7
     except Exception:
-        return "NoSSL/Error", False
+        return "NoSSL", False
 
 def check_dnsbl(domain, zone, friendly_name):
     try:
