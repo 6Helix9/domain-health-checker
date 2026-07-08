@@ -9,8 +9,8 @@ from datetime import datetime
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Domain Infrastructure & Reputation Suite",
-    page_icon="🛡️",
+    page_title="Expanded Redirect Domain Checker",
+    page_icon="🔗",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -232,9 +232,9 @@ def style_df_rows(row):
 
 # --- Master Layout Assembly ---
 
-# Header Section
-st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🛡️ Infrastructure & Reputation Engine</h2>", unsafe_allow_html=True)
-st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>High-concurrency vetting utility for target delivery and tracking domains.</p>", unsafe_allow_html=True)
+# Header Section (Reverted to your original title and caption)
+st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🔗 Expanded Redirect Domain Checker</h2>", unsafe_allow_html=True)
+st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>Checks SSL expiration and maps domains against multi-source threat intelligence platforms.</p>", unsafe_allow_html=True)
 
 # Secure Key Extraction
 GOOGLE_API_KEY = st.secrets.get("GOOGLE_SAFE_BROWSING_KEY", "")
@@ -245,18 +245,18 @@ SPAMHAUS_DQS_KEY = st.secrets.get("SPAMHAUS_DQS_KEY", "")
 domains_input = st.text_area(
     "Target Domains Submissions",
     height=160,
-    placeholder="Enter targets one per line (e.g., trackingdomain.com)",
+    placeholder="Enter targets one per line (e.g., example.com)",
     label_visibility="collapsed"
 )
 
-if st.button("Execute Verification Framework", type="primary"):
+if st.button("Run Comprehensive Check", type="primary"):
     target_list = [d.strip() for d in domains_input.splitlines() if d.strip()]
     
     if not target_list:
-        st.error("Submission queue empty. Please parse active targets.")
+        st.error("Submission queue empty. Please add at least one domain first.")
     else:
         # Dynamic Scanning UI Elements
-        scan_progress = st.progress(0, text="Assembling secure concurrent workers...")
+        scan_progress = st.progress(0, text="Initializing scanning...")
         dataset = []
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as worker_pool:
@@ -270,7 +270,7 @@ if st.button("Execute Verification Framework", type="primary"):
                 if execution_payload:
                     dataset.append(execution_payload)
                 completed += 1
-                scan_progress.progress(completed / len(target_list), text=f"Analyzing infrastructure nodes: {completed}/{len(target_list)}")
+                scan_progress.progress(completed / len(target_list), text=f"Checked {completed}/{len(target_list)}")
         
         scan_progress.empty()
         df = pd.DataFrame(dataset)
@@ -288,18 +288,18 @@ if st.button("Execute Verification Framework", type="primary"):
                 <div class="kpi-value">{total_count}</div>
             </div>
             <div class="kpi-card" style="border-left: 3px solid #10b981;">
-                <div class="kpi-label" style="color:#10b981;">Verified Operable</div>
+                <div class="kpi-label" style="color:#10b981;">Verified Clean</div>
                 <div class="kpi-value" style="color:#34d399;">{clean_count}</div>
             </div>
             <div class="kpi-card" style="border-left: 3px solid #ef4444;">
-                <div class="kpi-label" style="color:#ef4444;">Infrastructure Flagged</div>
+                <div class="kpi-label" style="color:#ef4444;">Domains Flagged</div>
                 <div class="kpi-value" style="color:#f87171;">{compromised_count}</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
         # System Output Matrix Display
-        st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>Comprehensive Risk Matrix</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>Analysis Results</h4>", unsafe_allow_html=True)
         st.dataframe(
             df.style.apply(style_df_rows, axis=1), 
             use_container_width=True,
@@ -308,32 +308,34 @@ if st.button("Execute Verification Framework", type="primary"):
 
         # Actionable Target Outputs Separator
         clean_assets = df[df["Status"] == "GOOD"]["Domain"].tolist()
-        st.markdown("<h4 style='font-weight:600; margin-top:28px; margin-bottom:12px;'>✅ Ready-to-Deploy Assets</h4>", unsafe_allow_html=True)
+        st.markdown("<h4 style='font-weight:600; margin-top:28px; margin-bottom:12px;'>✅ Clean / Verified Domains</h4>", unsafe_allow_html=True)
         if clean_assets:
             st.code("\n".join(clean_assets), language="text")
         else:
-            st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ Warning: No inputs passed the compliance threshold for direct deployment.</div>", unsafe_allow_html=True)
+            st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ No completely clean domains identified in this batch.</div>", unsafe_allow_html=True)
 
-        # --- Premium Redesigned Warning Message Component ---
+        # --- Your Custom Warning Message Box (Completely Restored) ---
         st.markdown(
             """
-            <div style="background-color: #171111; border: 1px solid #3a1c1e; border-left: 4px solid #ef4444;
-                        border-radius: 10px; padding: 20px; margin-top: 36px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                    <span style="font-size: 20px; line-height: 1;">⚠️</span>
-                    <span style="color: #f87171; font-weight: 700; font-size: 15px; letter-spacing: 0.3px; text-transform: uppercase;">
-                        Critical Deployment Safeguard Protocol
+            <div style="background-color:#2b1414; border-left: 4px solid #ff4d4d;
+                        border-radius: 8px; padding: 16px 20px; margin-top: 24px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:20px;">⚠️</span>
+                    <span style="color:#ff6b6b; font-weight:700; font-size:16px;">
+                        Before you launch any drops
                     </span>
-                </div>
-                <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0; font-weight: 400;">
-                    Every selected tracking or offer domain must undergo manual validation prior to pipeline execution. 
-                    Verify registration integrity via external query layers—never execute operations using infrastructure displaying historical or active records.
-                </p>
+                </div><br><br>
+               <p style="color:#e6e6e6; font-size:14px; line-height:1.6; margin:0 0 14px 0;">
+    Every selected domain must be manually double-checked before use.<br>
+    Confirm that it is not listed on Spamhaus or any other blacklist.<br>
+    Prefer to use domains that come back clean.<br>
+    Do not launch on a domain that is flagged.<br>
+</p>
                 <a href="https://multirbl.valli.org/lookup" target="_blank"
-                   style="display: inline-flex; align-items: center; background-color: #ef4444; color: #ffffff;
-                          font-weight: 600; font-size: 13px; padding: 8px 18px; letter-spacing: 0.2px;
-                          border-radius: 6px; text-decoration: none; transition: background 0.2s;">
-                    🔗 Query External MultiRBL Database
+                   style="display:inline-block; background-color:#ff4d4d; color:#1a0000;
+                          font-weight:700; font-size:14px; padding:8px 16px;
+                          border-radius:6px; text-decoration:none;">
+                    🔗 Check domain on multirbl.valli.org
                 </a>
             </div>
             """,
@@ -345,8 +347,8 @@ st.markdown(
     """
     <div style="text-align: center; margin-top: 70px; padding: 24px 0; border-top: 1px solid #1f2937;
                 color: #4b5563; font-size: 13px; letter-spacing: 0.5px;">
-        ⚡ Operational Framework Flow — <span style="color:#8b5cf6; font-weight:600;">vibe coded</span>
-        by <span style="color:#10b981; font-weight:600;">Ascended696</span>
+        ⚡ No plan, just flow — <span style="color:#a78bfa; font-weight:600;">vibe coded</span>
+        by <span style="color:#34d399; font-weight:600;">Ascended696</span>
     </div>
     """,
     unsafe_allow_html=True,
