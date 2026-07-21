@@ -1,12 +1,16 @@
 import streamlit as st
 import dns.resolver
+import socket
 import concurrent.futures
+import ssl
 import pandas as pd
+import requests
+from datetime import datetime
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Blacklist Monitoring",
-    page_icon="🛡️",
+    page_title="Expanded Redirect Domain Checker",
+    page_icon="🔗",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -71,202 +75,312 @@ st.markdown("""
         padding: 20px;
         text-align: left;
     }
-    .kpi-card.blue { border-left: 4px solid #3b82f6; }
-    .kpi-card.green { border-left: 4px solid #10b981; }
-    .kpi-card.red { border-left: 4px solid #ef4444; }
-    
     .kpi-label {
-        font-size: 10px;
+        font-size: 12px;
         text-transform: uppercase;
-        letter-spacing: 1.5px;
+        letter-spacing: 1px;
         color: #9ca3af;
         margin-bottom: 6px;
-        font-weight: 700;
+        font-weight: 600;
     }
     .kpi-value {
-        font-size: 24px;
+        font-size: 28px;
         font-weight: 700;
         color: #ffffff;
     }
-
-    /* Info Alert Card */
-    .info-card {
-        background: rgba(59, 130, 246, 0.05);
-        border: 1px solid rgba(59, 130, 246, 0.2);
+    
+    /* Premium Column Warning Card */
+    .warning-card {
+        background: linear-gradient(180deg, #1a0f12 0%, #0d0708 100%);
+        border: 1px solid #3d1c20;
+        border-top: 3px solid #ef4444;
         border-radius: 12px;
-        padding: 16px 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-top: 24px;
+        padding: 28px 32px;
+        box-shadow: 0 20px 40px -15px rgba(239, 68, 68, 0.15);
+        text-align: center;
+        height: 100%;
+        margin-top: 8px;
     }
-    .info-text {
-        font-size: 11px;
-        line-height: 1.6;
-        color: #9ca3af;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    .warning-btn {
+        display: inline-block;
+        background: rgba(239, 68, 68, 0.05);
+        color: #f87171 !important;
+        border: 1px solid rgba(239, 68, 68, 0.3);
         font-weight: 600;
+        font-size: 14px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none !important;
+        transition: all 0.3s ease;
+        letter-spacing: 0.5px;
+        margin-top: 12px;
+    }
+    .warning-btn:hover {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: #ef4444;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px -6px rgba(239, 68, 68, 0.4);
     }
 </style>
 """, unsafe_allow_html=True)
 
 # --- Configuration & Core Functions ---
 
-DNSBL_SOURCES = {
-    'Spamhaus': 'zen.spamhaus.org',
-    'SpamCop': 'bl.spamcop.net',
-    'Barracuda': 'b.barracudacentral.org',
-    'SORBS': 'dnsbl.sorbs.net',
-    'SpamRats': 'all.spamrats.com',
-    'UCEPROTECT': 'dnsbl-1.uceprotect.net',
-    'PSBL': 'psbl.surriel.com'
-}
-
-def reverse_ip(ip):
-    """Reverses IP for DNSBL querying (e.g., 1.2.3.4 -> 4.3.2.1)"""
-    return ".".join(reversed(ip.split(".")))
-
-def check_single_dnsbl(ip, zone):
+def check_ssl_expiry(domain):
     try:
-        query = f"{reverse_ip(ip)}.{zone}"
-        dns.resolver.resolve(query, "A")
-        return "Listed"
-    except dns.resolver.NXDOMAIN:
-        return "Clean"
+        context = ssl.create_default_context()
+        with socket.create_connection((domain, 443), timeout=4) as sock:
+            with context.wrap_socket(sock, server_hostname=domain) as ssock:
+                cert = ssock.getpeercert()
+                expiry_str = cert["notAfter"]
+                expiry_date = datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z")
+                days_left = (expiry_date - datetime.now()).days
+                if days_left <= 0:
+                    return "Expired", False
+                return f"{days_left} days left", days_left > 7
     except Exception:
-        return "Unknown"
+        return "No SSL Detected", False
 
-def analyze_ip_reputation(ip, domain):
-    ip = ip.strip()
-    result_row = {"Node / IP": ip, "PTR / Domain": domain}
-    is_listed = False
+def check_dnsbl(domain, zone, friendly_name):
+    try:
+        query = f"{domain}.{zone}"
+        dns.resolver.resolve(query, "A")
+        return friendly_name
+    except Exception:
+        return None
+
+def check_google_safe_browsing(domain, api_key):
+    if not api_key:
+        return "Missing Credentials"
+    url = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={api_key}"
+    payload = {
+        "client": {"clientId": "reputation-suite", "clientVersion": "1.0.0"},
+        "threatInfo": {
+            "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+            "platformTypes": ["ANY_PLATFORM"],
+            "threatEntryTypes": ["URL"],
+            "threatEntries": [{"url": f"http://{domain}"}, {"url": f"https://{domain}"}]
+        }
+    }
+    try:
+        response = requests.post(url, json=payload, timeout=4)
+        if response.status_code == 200 and response.json():
+            return "❌ FLAGGED"
+        return "🟢 CLEAN"
+    except Exception:
+        return "API Timeout"
+
+def check_virustotal(domain, api_key):
+    if not api_key:
+        return "Missing Credentials"
+    url = f"https://www.virustotal.com/api/v3/domains/{domain}"
+    headers = {"x-apikey": api_key}
+    try:
+        response = requests.get(url, headers=headers, timeout=4)
+        if response.status_code == 200:
+            data = response.json()
+            stats = data.get("data", {}).get("attributes", {}).get("last_analysis_stats", {})
+            malicious = stats.get("malicious", 0)
+            phishing = stats.get("phishing", 0)
+            total_hits = malicious + phishing
+            if total_hits > 0:
+                return f"❌ FLAGGED ({total_hits} Engines)"
+        return "🟢 CLEAN"
+    except Exception:
+        return "API Timeout"
+
+def check_urlhaus(domain):
+    url = "https://urlhaus-api.abuse.ch/v1/host/"
+    try:
+        response = requests.post(url, data={"host": domain}, timeout=4)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("query_status") == "ok" and data.get("blacklisted") == "yes":
+                return "❌ FLAGGED"
+        return "🟢 CLEAN"
+    except Exception:
+        return "API Timeout"
+
+def analyze_domain(domain, google_key, vt_key, spamhaus_key):
+    domain = domain.strip().lower()
+    if not domain:
+        return None
     
-    # Process all lists for this specific IP
-    for source_name, zone in DNSBL_SOURCES.items():
-        status = check_single_dnsbl(ip, zone)
-        result_row[source_name] = status
-        if status == "Listed":
-            is_listed = True
-            
-    return result_row, is_listed
+    try:
+        socket.gethostbyname(domain)
+    except Exception:
+        return {
+            "Domain": domain, "SSL Gateway": "⚠️ Connection Failed", "DNS Blocklists": "🔴 UNRESOLVABLE",
+            "Google Safe Browsing": "—", "VirusTotal Intelligence": "—", "URLHaus Payload": "—",
+            "Status": "BAD"
+        }
+
+    ssl_val, ssl_ok = check_ssl_expiry(domain)
+    
+    detected_bls = []
+    surbl = check_dnsbl(domain, "multi.surbl.org", "SURBL")
+    sorbs = check_dnsbl(domain, "uribl.rhsbl.sorbs.net", "SORBS")
+    
+    if surbl: detected_bls.append(surbl)
+    if sorbs: detected_bls.append(sorbs)
+    
+    if spamhaus_key:
+        spamhaus = check_dnsbl(f"{domain}.{spamhaus_key}", "dbl.spamhaus.org", "Spamhaus DBL")
+        if spamhaus: detected_bls.append(spamhaus)
+    else:
+        spamhaus = check_dnsbl(domain, "dbl.spamhaus.org", "Spamhaus DBL")
+        if spamhaus: detected_bls.append(spamhaus)
+
+    gsb = check_google_safe_browsing(domain, google_key)
+    vt = check_virustotal(domain, vt_key)
+    urlhaus = check_urlhaus(domain)
+    
+    bl_summary = f"❌ LISTED ({', '.join(detected_bls)})" if detected_bls else "🟢 CLEAN"
+    
+    reputation_clean = (
+        not detected_bls and 
+        "CLEAN" in gsb and 
+        "CLEAN" in vt and 
+        "CLEAN" in urlhaus
+    )
+
+    if reputation_clean and ssl_ok:
+        final_status = "GOOD"
+    elif reputation_clean and not ssl_ok:
+        final_status = "NON-SSL"
+    else:
+        final_status = "BAD"
+
+    return {
+        "Domain": domain,
+        "SSL Gateway": ssl_val,
+        "DNS Blocklists": bl_summary,
+        "Google Safe Browsing": gsb,
+        "VirusTotal Intelligence": vt,
+        "URLHaus Payload": urlhaus,
+        "Status": final_status
+    }
 
 def style_df_rows(row):
-    """Styles the dataframe dynamically based on status matching the React UI"""
+    base_style = "background-color: {bg}; border-bottom: 1px solid #1f2937; color: #e1e7ef;"
+    glow_style = "background-color: {bg}; border-bottom: 1px solid #1f2937; color: {color}; text-shadow: 0 0 12px {color}, 0 0 24px {color}; font-weight: 800; text-align: center; font-size: 15px;"
+    
+    if row["Status"] == "GOOD":
+        bg = "rgba(16, 185, 129, 0.08)"
+        glow_color = "#34d399"
+    elif row["Status"] == "NON-SSL":
+        bg = "rgba(245, 158, 11, 0.08)"
+        glow_color = "#fbbf24"
+    else:
+        bg = "rgba(239, 68, 68, 0.08)"
+        glow_color = "#f87171"
+        
     styles = []
     for col in row.index:
-        if col in ["Node / IP", "PTR / Domain"]:
-            styles.append("background-color: #161a1f; color: #f3f4f6; border-bottom: 1px solid #1f2937;")
+        if col == "Status":
+            styles.append(glow_style.format(bg=bg, color=glow_color))
         else:
-            val = row[col]
-            if val == "Clean":
-                styles.append("background-color: rgba(16, 185, 129, 0.08); color: #34d399; font-weight: 700; text-align: center; border-bottom: 1px solid #1f2937;")
-            elif val == "Listed":
-                styles.append("background-color: rgba(239, 68, 68, 0.08); color: #f87171; font-weight: 700; text-align: center; text-shadow: 0 0 8px #f87171; border-bottom: 1px solid #1f2937;")
-            else:
-                styles.append("background-color: rgba(156, 163, 175, 0.05); color: #9ca3af; text-align: center; border-bottom: 1px solid #1f2937;")
+            styles.append(base_style.format(bg=bg))
+            
     return styles
 
 # --- Master Layout Assembly ---
 
-st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🛡️ Blacklist Monitoring</h2>", unsafe_allow_html=True)
-st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>Track IP and Domain reputation across 7 major providers.</p>", unsafe_allow_html=True)
+st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🔗 Redirect Domain Checker</h2>", unsafe_allow_html=True)
+st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>Every jump leaves a trace. Secure the chain, guarantee the drop.</p>", unsafe_allow_html=True)
 
-infrastructure_input = st.text_area(
-    "Infrastructure Targets",
-    height=140,
-    placeholder="Format: IP, Domain (e.g., 192.168.1.1, example.com)\nEnter one per line.",
+GOOGLE_API_KEY = st.secrets.get("GOOGLE_SAFE_BROWSING_KEY", "")
+VIRUSTOTAL_API_KEY = st.secrets.get("VIRUSTOTAL_KEY", "")
+SPAMHAUS_DQS_KEY = st.secrets.get("SPAMHAUS_DQS_KEY", "")
+
+domains_input = st.text_area(
+    "Target Domains Submissions",
+    height=160,
+    placeholder="Enter targets one per line (e.g., example.com)",
     label_visibility="collapsed"
 )
 
-if st.button("Check All Repository", type="primary"):
-    lines = [line.strip() for line in infrastructure_input.splitlines() if line.strip()]
+if st.button("Run Comprehensive Check", type="primary"):
+    target_list = [d.strip() for d in domains_input.splitlines() if d.strip()]
     
-    if not lines:
-        st.error("No infrastructure found to monitor. Please add IPs first.")
+    if not target_list:
+        st.error("Submission queue empty. Please add at least one domain first.")
     else:
-        # Parse inputs
-        target_list = []
-        for line in lines:
-            parts = [p.strip() for p in line.split(",")]
-            if len(parts) >= 2:
-                target_list.append((parts[0], parts[1]))
-            else:
-                target_list.append((parts[0], "Unknown Domain"))
-                
-        scan_progress = st.progress(0, text="Starting bulk DNSBL reputation check...")
-        
+        scan_progress = st.progress(0, text="Initializing scanning...")
         dataset = []
-        total_count = len(target_list)
-        listed_count = 0
         
-        # Concurrent execution 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as worker_pool:
-            future_to_ip = {
-                worker_pool.submit(analyze_ip_reputation, ip, dom): ip 
-                for ip, dom in target_list
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as worker_pool:
+            future_to_domain = {
+                worker_pool.submit(analyze_domain, d, GOOGLE_API_KEY, VIRUSTOTAL_API_KEY, SPAMHAUS_DQS_KEY): d 
+                for d in target_list
             }
             completed = 0
-            for future in concurrent.futures.as_completed(future_to_ip):
-                row_data, is_listed = future.result()
-                dataset.append(row_data)
-                if is_listed:
-                    listed_count += 1
-                    
+            for future in concurrent.futures.as_completed(future_to_domain):
+                execution_payload = future.result()
+                if execution_payload:
+                    dataset.append(execution_payload)
                 completed += 1
-                scan_progress.progress(completed / total_count, text=f"Checked {completed}/{total_count}")
+                scan_progress.progress(completed / len(target_list), text=f"Checked {completed}/{len(target_list)}")
         
         scan_progress.empty()
-        
-        # Render KPIs
-        clean_count = total_count - listed_count
-        
-        st.markdown(f"""
-        <div class="kpi-container">
-            <div class="kpi-card blue">
-                <div class="kpi-label">Total Monitored</div>
-                <div class="kpi-value">{total_count}</div>
-            </div>
-            <div class="kpi-card green">
-                <div class="kpi-label">Clean IPs</div>
-                <div class="kpi-value" style="color: #34d399;">{clean_count}</div>
-            </div>
-            <div class="kpi-card red">
-                <div class="kpi-label">Listed / Blacklisted</div>
-                <div class="kpi-value" style="color: #f87171;">{listed_count}</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Render Table
         df = pd.DataFrame(dataset)
-        
-        # Ensure column order matches the React app
-        cols = ["Node / IP", "PTR / Domain"] + list(DNSBL_SOURCES.keys())
-        df = df[cols]
 
+        st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>Analysis Results</h4>", unsafe_allow_html=True)
         st.dataframe(
             df.style.apply(style_df_rows, axis=1), 
             use_container_width=True,
             hide_index=True
         )
 
-        # Network Exhaustion Warning[cite: 1]
-        st.markdown("""
-        <div class="info-card">
-            <div style="color: #3b82f6; font-size: 20px;">⚠️</div>
-            <div class="info-text">
-                System queries direct DNSBL nodes automatically. If querying a large global fleet, use a dedicated DNS resolver to minimize latency and prevent network UDP exhaustion.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
+        
+        # --- Side-by-Side Layout ---
+        col1, col2 = st.columns([1, 1.2], gap="large")
+        
+        with col1:
+            clean_assets = df[(df["Status"] == "GOOD") | (df["Status"] == "NON-SSL")]["Domain"].tolist()
+            st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>✅ Clean / Usable Domains</h4>", unsafe_allow_html=True)
+            if clean_assets:
+                st.code("\n".join(clean_assets), language="text")
+            else:
+                st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ No clean domains identified in this batch.</div>", unsafe_allow_html=True)
+
+        with col2:
+            st.markdown(
+                """
+                <div class="warning-card">
+                    <div style="font-size: 28px; margin-bottom: 8px; line-height: 1;">⚠️</div>
+                    <h3 style="color: #f87171; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px 0;">
+                        Before You Launch Any Drops
+                    </h3>
+                    <div style="color: #9ca3af; font-size: 14px; line-height: 1.6; margin-bottom: 16px; text-align: center;">
+                        <p style="margin: 0 0 12px 0;">
+                            Every selected domain must be manually double-checked before use.<br>
+                            Confirm that it is not listed on Spamhaus or any other blacklist.<br>
+                            Prefer to use domains that come back clean.
+                        </p>
+                        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 10px; margin: 12px 0;">
+                            <span style="color: #fcd34d; font-weight: 700; font-size: 13px; letter-spacing: 0.5px;">💡 NOTE ON NON-SSL DOMAINS</span><br>
+                            <span style="color: #d1d5db; font-size: 13px;">If a domain is <b>NON-SSL</b> but clean on all blocklists, it is often fine to use for drops or HTTP redirects.</span>
+                        </div>
+                        <p style="color: #e5e7eb; font-weight: 600; margin: 0;">
+                            Do not launch on a domain that is flagged.
+                        </p>
+                    </div>
+                    <a href="https://multirbl.valli.org/lookup" target="_blank" class="warning-btn">
+                        🔗 Check domain on MultiRBL
+                    </a>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 st.markdown(
     """
     <div style="text-align: center; margin-top: 40px; padding: 24px 0; border-top: 1px solid #1f2937;
                 color: #4b5563; font-size: 13px; letter-spacing: 0.5px;">
         ⚡ No plan, just flow — <span style="color:#a78bfa; font-weight:600;">vibe coded</span>
-        by <span style="color:#3b82f6; font-weight:600;">Ascended696</span>
+        by <span style="color:#34d399; font-weight:600;">Ascended696</span>
     </div>
     """,
     unsafe_allow_html=True,
