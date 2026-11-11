@@ -367,7 +367,7 @@ if st.button("Run Comprehensive Check", type="primary"):
                             Do not launch on a domain that is flagged.
                         </p>
                     </div>
-                    <a href="https://multirbl.valli.org/lookup" target="_blank" class="warning-btn">
+                    <a href="https://wintelguy.com/url-blacklist-checker.pl" target="_blank" class="warning-btn">
                         🔗 Check domain on MultiRBL
                     </a>
                 </div>
