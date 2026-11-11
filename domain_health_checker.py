@@ -302,7 +302,7 @@ def style_df_rows(row):
 st.markdown("""
 <div style='text-align: center; margin-bottom: 40px; margin-top: 20px;'>
     <h1 style='font-weight: 800; font-size: 42px; background: linear-gradient(to right, #8b5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>
-        ⚡ Nexus Domain Scanner
+        ⚡ Domain Checker ⚡
     </h1>
     <p style='color: #94a3b8; font-size: 16px; font-weight: 500; letter-spacing: 1px;'>
         SECURE THE CHAIN. GUARANTEE THE DROP.
@@ -324,7 +324,7 @@ domains_input = st.text_area(
 # Center the button using columns
 col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
 with col_btn2:
-    run_check = st.button("🚀 Initialize Deep Scan", type="primary", use_container_width=True)
+    run_check = st.button(" Run Deep Scan", type="primary", use_container_width=True)
 
 if run_check:
     target_list = [d.strip() for d in domains_input.splitlines() if d.strip()]
@@ -352,7 +352,7 @@ if run_check:
         scan_progress.empty()
         df = pd.DataFrame(dataset)
 
-        st.markdown("<h3 style='font-weight:700; margin-bottom:16px; color:#f8fafc;'>📡 Threat Analysis Matrix</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='font-weight:700; margin-bottom:16px; color:#f8fafc;'>📡 Results</h3>", unsafe_allow_html=True)
         st.dataframe(
             df.style.apply(style_df_rows, axis=1), 
             use_container_width=True,
@@ -367,7 +367,7 @@ if run_check:
         
         with col1:
             clean_assets = df[(df["Status"] == "GOOD") | (df["Status"] == "NON-SSL")]["Domain"].tolist()
-            st.markdown("<h3 style='font-weight:700; margin-bottom:16px; color:#34d399;'>✅ Validated Assets</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='font-weight:700; margin-bottom:16px; color:#34d399;'>✅ Ready To Use</h3>", unsafe_allow_html=True)
             if clean_assets:
                 st.code("\n".join(clean_assets), language="text")
             else:
