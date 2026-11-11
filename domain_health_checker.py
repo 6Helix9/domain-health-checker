@@ -364,11 +364,11 @@ if st.button("Run Comprehensive Check", type="primary"):
                             <span style="color: #d1d5db; font-size: 13px;">If a domain is <b>NON-SSL</b> but clean on all blocklists, it is often fine to use for drops or HTTP redirects.</span>
                         </div>
                         <p style="color: #e5e7eb; font-weight: 600; margin: 0;">
-                            Do not launch on a domain that is flagged.
+                            Do not launch on a domain that is FLAGGED or LISTED.
                         </p>
                     </div>
                     <a href="https://wintelguy.com/url-blacklist-checker.pl" target="_blank" class="warning-btn">
-                        🔗 Check domain on MultiRBL
+                        🔗 Check domain on wintelguy
                     </a>
                 </div>
                 """,
