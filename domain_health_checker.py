@@ -10,128 +10,116 @@ from datetime import datetime
 # --- Page Configuration ---
 st.set_page_config(
     page_title="Expanded Redirect Domain Checker",
-    page_icon="⚡",
+    page_icon="🔗",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 🚀 ULTRA PREMIUM UI THEME INJECTION (WOW EFFECT) 🚀 ---
+# --- High-End Custom UI Theme Injection ---
 st.markdown("""
 <style>
-    /* Premium Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+    /* Global App Overrides */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    /* Global Background & Typography */
     html, body, [data-testid="stAppViewContainer"] {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        background: #050505;
-        background-image: 
-            radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-            radial-gradient(at 100% 100%, rgba(217, 70, 239, 0.15) 0px, transparent 50%);
-        background-attachment: fixed;
-        color: #e2e8f0;
+        font-family: 'Inter', sans-serif;
+        background-color: #0d0f12;
+        color: #f3f4f6;
     }
     
-    /* Hide default Streamlit overheads */
+    /* Hide default Streamlit overheads cleanly */
     #MainMenu, footer, header {visibility: hidden;}
     
-    /* Ultra Modern Text Area (Glassmorphism + Neon Focus) */
+    /* Modern Input Form Styling */
     div[data-testid="stTextArea"] textarea {
-        background: rgba(255, 255, 255, 0.02) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 16px !important;
-        color: #34d399 !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 15px !important;
-        padding: 16px !important;
-        box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.5) !important;
-        transition: all 0.3s ease !important;
+        background-color: #161a1f !important;
+        border: 1px solid #2d3748 !important;
+        border-radius: 10px !important;
+        color: #f3f4f6 !important;
+        font-family: 'Fira Code', monospace !important;
+        font-size: 14px !important;
+        padding: 14px !important;
     }
     div[data-testid="stTextArea"] textarea:focus {
-        border-color: #8b5cf6 !important;
-        box-shadow: 0 0 25px rgba(139, 92, 246, 0.3), inset 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 1px #6366f1 !important;
     }
 
-    /* Primary Action Button - Animated Gradient Glow */
+    /* Primary Action Button Refinement */
     button[kind="primary"] {
-        background: linear-gradient(45deg, #4f46e5, #8b5cf6, #ec4899) !important;
-        background-size: 200% 200% !important;
-        animation: gradientGlow 4s ease infinite !important;
+        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
         border: none !important;
-        border-radius: 12px !important;
-        padding: 14px 32px !important;
-        color: white !important;
-        font-weight: 800 !important;
-        letter-spacing: 1.5px !important;
-        text-transform: uppercase !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4) !important;
-    }
-    @keyframes gradientGlow {
-        0% {background-position: 0% 50%;}
-        50% {background-position: 100% 50%;}
-        100% {background-position: 0% 50%;}
+        border-radius: 8px !important;
+        padding: 12px 28px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px !important;
+        transition: all 0.2s ease-in-out !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25) !important;
     }
     button[kind="primary"]:hover {
-        transform: translateY(-3px) scale(1.02) !important;
-        box-shadow: 0 12px 30px rgba(139, 92, 246, 0.6) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
     }
 
-    /* Warning Card - Red Glassmorphism */
+    /* Executive KPI Dashboard Cards */
+    .kpi-container {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .kpi-card {
+        flex: 1;
+        background-color: #161a1f;
+        border: 1px solid #232932;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: left;
+    }
+    .kpi-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #9ca3af;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    
+    /* Premium Column Warning Card */
     .warning-card {
-        background: rgba(239, 68, 68, 0.03);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(239, 68, 68, 0.15);
-        border-top: 4px solid #ef4444;
-        border-radius: 16px;
-        padding: 32px;
+        background: linear-gradient(180deg, #1a0f12 0%, #0d0708 100%);
+        border: 1px solid #3d1c20;
+        border-top: 3px solid #ef4444;
+        border-radius: 12px;
+        padding: 28px 32px;
         box-shadow: 0 20px 40px -15px rgba(239, 68, 68, 0.15);
         text-align: center;
         height: 100%;
-        position: relative;
-        overflow: hidden;
-    }
-    .warning-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: -100%; width: 50%; height: 100%;
-        background: linear-gradient(to right, transparent, rgba(239, 68, 68, 0.1), transparent);
-        transform: skewX(-20deg);
-        animation: shine 4s infinite;
-    }
-    @keyframes shine {
-        0% {left: -100%;}
-        20% {left: 200%;}
-        100% {left: 200%;}
+        margin-top: 8px;
     }
     .warning-btn {
         display: inline-block;
-        background: rgba(239, 68, 68, 0.1);
-        color: #fca5a5 !important;
-        border: 1px solid rgba(239, 68, 68, 0.4);
-        font-weight: 700;
+        background: rgba(239, 68, 68, 0.05);
+        color: #f87171 !important;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        font-weight: 600;
         font-size: 14px;
-        padding: 12px 28px;
-        border-radius: 10px;
+        padding: 12px 24px;
+        border-radius: 8px;
         text-decoration: none !important;
         transition: all 0.3s ease;
-        letter-spacing: 1px;
-        margin-top: 16px;
-        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 12px;
     }
     .warning-btn:hover {
-        background: #ef4444;
-        color: white !important;
-        box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+        background: rgba(239, 68, 68, 0.15);
+        border-color: #ef4444;
         transform: translateY(-2px);
-    }
-    
-    /* Code block styling */
-    stCodeBlock {
-        border-radius: 12px !important;
-        border: 1px solid rgba(255,255,255,0.1) !important;
+        box-shadow: 0 8px 24px -6px rgba(239, 68, 68, 0.4);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -274,18 +262,18 @@ def analyze_domain(domain, google_key, vt_key, spamhaus_key):
     }
 
 def style_df_rows(row):
-    base_style = "background-color: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; font-family: 'JetBrains Mono', monospace;"
-    glow_style = "background-color: {bg}; border-bottom: 1px solid rgba(255,255,255,0.05); color: {color}; text-shadow: 0 0 15px {color}; font-weight: 800; text-align: center; font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: 1px;"
+    base_style = "background-color: {bg}; border-bottom: 1px solid #1f2937; color: #e1e7ef;"
+    glow_style = "background-color: {bg}; border-bottom: 1px solid #1f2937; color: {color}; text-shadow: 0 0 12px {color}, 0 0 24px {color}; font-weight: 800; text-align: center; font-size: 15px;"
     
     if row["Status"] == "GOOD":
-        bg = "rgba(16, 185, 129, 0.05)"
-        glow_color = "#10b981"
+        bg = "rgba(16, 185, 129, 0.08)"
+        glow_color = "#34d399"
     elif row["Status"] == "NON-SSL":
-        bg = "rgba(245, 158, 11, 0.05)"
-        glow_color = "#f59e0b"
+        bg = "rgba(245, 158, 11, 0.08)"
+        glow_color = "#fbbf24"
     else:
-        bg = "rgba(239, 68, 68, 0.05)"
-        glow_color = "#ef4444"
+        bg = "rgba(239, 68, 68, 0.08)"
+        glow_color = "#f87171"
         
     styles = []
     for col in row.index:
@@ -298,17 +286,8 @@ def style_df_rows(row):
 
 # --- Master Layout Assembly ---
 
-# Futuristic Header
-st.markdown("""
-<div style='text-align: center; margin-bottom: 40px; margin-top: 20px;'>
-    <h1 style='font-weight: 800; font-size: 42px; background: linear-gradient(to right, #8b5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;'>
-        ⚡ Domain Checker ⚡
-    </h1>
-    <p style='color: #94a3b8; font-size: 16px; font-weight: 500; letter-spacing: 1px;'>
-        SECURE THE CHAIN. GUARANTEE THE DROP.
-    </p>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<h2 style='margin-bottom:0px; font-weight:700;'>🔗 Redirect Domain Checker</h2>", unsafe_allow_html=True)
+st.markdown("<p style='color:#9ca3af; font-size:14px; margin-bottom:32px;'>Every jump leaves a trace. Secure the chain, guarantee the drop.</p>", unsafe_allow_html=True)
 
 GOOGLE_API_KEY = st.secrets.get("GOOGLE_SAFE_BROWSING_KEY", "")
 VIRUSTOTAL_API_KEY = st.secrets.get("VIRUSTOTAL_KEY", "")
@@ -317,23 +296,17 @@ SPAMHAUS_DQS_KEY = st.secrets.get("SPAMHAUS_DQS_KEY", "")
 domains_input = st.text_area(
     "Target Domains Submissions",
     height=160,
-    placeholder="Enter targets one per line (e.g., example.com)\n>_ waiting for input...",
+    placeholder="Enter targets one per line (e.g., example.com)",
     label_visibility="collapsed"
 )
 
-# Center the button using columns
-col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-with col_btn2:
-    run_check = st.button(" Run Deep Scan", type="primary", use_container_width=True)
-
-if run_check:
+if st.button("Run Comprehensive Check", type="primary"):
     target_list = [d.strip() for d in domains_input.splitlines() if d.strip()]
     
     if not target_list:
         st.error("Submission queue empty. Please add at least one domain first.")
     else:
-        st.markdown("<br>", unsafe_allow_html=True)
-        scan_progress = st.progress(0, text="Establishing secure connections...")
+        scan_progress = st.progress(0, text="Initializing scanning...")
         dataset = []
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as worker_pool:
@@ -347,56 +320,55 @@ if run_check:
                 if execution_payload:
                     dataset.append(execution_payload)
                 completed += 1
-                scan_progress.progress(completed / len(target_list), text=f"Scanning nodes: {completed}/{len(target_list)}")
+                scan_progress.progress(completed / len(target_list), text=f"Checked {completed}/{len(target_list)}")
         
         scan_progress.empty()
         df = pd.DataFrame(dataset)
 
-        st.markdown("<h3 style='font-weight:700; margin-bottom:16px; color:#f8fafc;'>📡 Results</h3>", unsafe_allow_html=True)
+        st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>Analysis Results</h4>", unsafe_allow_html=True)
         st.dataframe(
             df.style.apply(style_df_rows, axis=1), 
             use_container_width=True,
-            hide_index=True,
-            height=(len(df) * 40) + 40
+            hide_index=True
         )
 
-        st.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
         
         # --- Side-by-Side Layout ---
         col1, col2 = st.columns([1, 1.2], gap="large")
         
         with col1:
             clean_assets = df[(df["Status"] == "GOOD") | (df["Status"] == "NON-SSL")]["Domain"].tolist()
-            st.markdown("<h3 style='font-weight:700; margin-bottom:16px; color:#34d399;'>✅ Ready To Use</h3>", unsafe_allow_html=True)
+            st.markdown("<h4 style='font-weight:600; margin-bottom:12px;'>✅ Clean / Usable Domains</h4>", unsafe_allow_html=True)
             if clean_assets:
                 st.code("\n".join(clean_assets), language="text")
             else:
-                st.markdown("""
-                <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color:#fca5a5; padding: 16px 20px; border-radius:12px; font-weight: 500;'>
-                    ⚠️ Zero clean domains identified in this batch.
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown("<div style='background-color:#1c1415; border: 1px solid #3b2326; color:#f87171; padding: 12px 16px; border-radius:8px; font-size:14px;'>⚠️ No clean domains identified in this batch.</div>", unsafe_allow_html=True)
 
         with col2:
             st.markdown(
                 """
                 <div class="warning-card">
-                    <div style="font-size: 36px; margin-bottom: 12px; line-height: 1;">⚠️</div>
-                    <h3 style="color: #f87171; font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 16px 0;">
-                        Critical Protocol
+                    <div style="font-size: 28px; margin-bottom: 8px; line-height: 1;">⚠️</div>
+                    <h3 style="color: #f87171; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px 0;">
+                        Before You Launch Any Drops
                     </h3>
-                    <div style="color: #cbd5e1; font-size: 15px; line-height: 1.6; margin-bottom: 20px; text-align: center; font-weight: 400;">
-                        <p style="margin: 0 0 16px 0;">
-                            Every selected domain must be manually verified.<br>
-                            Confirm zero listings on Spamhaus or major blacklists.
+                    <div style="color: #9ca3af; font-size: 14px; line-height: 1.6; margin-bottom: 16px; text-align: center;">
+                        <p style="margin: 0 0 12px 0;">
+                            Every selected domain must be manually double-checked before use.<br>
+                            Confirm that it is not listed on Spamhaus or any other blacklist.<br>
+                            Prefer to use domains that come back clean.
                         </p>
-                        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 12px; margin: 16px 0;">
-                            <span style="color: #fbbf24; font-weight: 700; font-size: 12px; letter-spacing: 1px; display: block; margin-bottom: 4px;">💡 NON-SSL EXCEPTION</span>
-                            <span style="color: #94a3b8; font-size: 13px;">NON-SSL domains with a clean reputation are acceptable for standard HTTP redirects/drops.</span>
+                        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 10px; margin: 12px 0;">
+                            <span style="color: #fcd34d; font-weight: 700; font-size: 13px; letter-spacing: 0.5px;">💡 NOTE ON NON-SSL DOMAINS</span><br>
+                            <span style="color: #d1d5db; font-size: 13px;">If a domain is <b>NON-SSL</b> but clean on all blocklists, it is often fine to use for drops or HTTP redirects.</span>
                         </div>
+                        <p style="color: #e5e7eb; font-weight: 600; margin: 0;">
+                            Do not launch on a domain that is FLAGGED or LISTED.
+                        </p>
                     </div>
                     <a href="https://wintelguy.com/url-blacklist-checker.pl" target="_blank" class="warning-btn">
-                        🔗 Verify on WintelGuy
+                        🔗 Check domain on wintelguy
                     </a>
                 </div>
                 """,
@@ -405,10 +377,10 @@ if run_check:
 
 st.markdown(
     """
-    <div style="text-align: center; margin-top: 60px; padding: 30px 0; border-top: 1px solid rgba(255,255,255,0.05);
-                color: #64748b; font-size: 13px; letter-spacing: 1px; font-weight: 500;">
-        ⚡ NO PLAN, JUST FLOW — <span style="color:#c084fc; font-weight:700;">VIBE CODED</span>
-        BY <span style="color:#34d399; font-weight:700;">ASCENDED696</span>
+    <div style="text-align: center; margin-top: 40px; padding: 24px 0; border-top: 1px solid #1f2937;
+                color: #4b5563; font-size: 13px; letter-spacing: 0.5px;">
+        ⚡ No plan, just flow — <span style="color:#a78bfa; font-weight:600;">vibe coded</span>
+        by <span style="color:#34d399; font-weight:600;">Ascended696</span>
     </div>
     """,
     unsafe_allow_html=True,
